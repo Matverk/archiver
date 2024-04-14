@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include "types.h"
 #include "math_func.h"
+#include "information.h"
 
-void set_information(symbol* simbols, int* k, int* kk, int* fsize_2) {
-    for (int i = 0; i < *k; i++) {    
-        printf("N= %d\tCode= %d\tFreq= %f\tNum=%f\tSymb=%c\n",i, simbols[i].ch, simbols[i].freq, simbols[i].freq*(*kk), simbols[i].ch);
-    }
-    printf("\nLetters = %d\n", *kk);
-    printf("Entropy = %f\n", entropy_count(simbols, k));
-    printf("Bit cost = %f\n", bcost(fsize_2, *kk));
+void show_information(symbol* simbols, int* uniqk, int* allk, int* fsize_2) {
+    for (int i = 0; i < *uniqk; i++)
+        printf("N: %i\tCode: %d\tFreq: %f\tQuant: %.0f\tSymb: \"%c\"\n",
+            i, simbols[i].ch, simbols[i].freq, simbols[i].freq * (*allk), simbols[i].ch);
+    printf("\nLetters: %d\n", *allk);
+    printf("Entropy: %f\n", entropy_count(simbols, uniqk));
+    printf("Bit costs: %f\n", bit_costs(fsize_2, *allk));
 }
