@@ -6,8 +6,7 @@
 #include "file_In_out.h"
 #include "math_func.h"
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 
     if (argc != 3) {
         printf("Error with arguments\n");
@@ -25,14 +24,13 @@ int main(int argc, char* argv[])
     symbol simbols[256] = { 0 }; //инициализируем массив записей 
     symbol* psym[256]; //инициализируем массив указателей на записи
     int fsize2 = 0;//счётчик количества символов из 0 и 1 в промежуточном файле temp
+
     //Обработка ошибок чтения файла
-   
-    if (fp == NULL)
-    {
+    if (fp == NULL) {
         puts("File not open");
         return 0;
     }
-    
+
     reading_from_file(fp, simbols, kolvo, &kk, &k);  //Эту функцию опишите самостоятельно
 
     // Расчёт частоты встречаемости
@@ -50,17 +48,15 @@ int main(int argc, char* argv[])
 
     rewind(fp);//возвращаем указатель в файле в начало файла
     //в цикле читаем исходный файл, и записываем полученные в функциях коды в промежуточный файл
-    while ((chh = fgetc(fp)) != EOF)
-    {
+    while ((chh = fgetc(fp)) != EOF) {
         for (int i = 0; i < k; i++)
-            if (chh == simbols[i].ch)
-                fputs(simbols[i].code, fp2);
+            if (chh == simbols[i].ch) fputs(simbols[i].code, fp2);
     }
     fclose(fp2);
 
     //writing_to_file(fp2, fp3, simbols, kolvo, &kk, &k, &fsize2);  //Эту функцию опишите самостоятельно
     //set_information(simbols, &k, &kk, &fsize2); 
-   
+
     fclose(fp);
     fclose(fp3);
     return 0;
