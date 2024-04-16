@@ -1,1 +1,1 @@
-gcc ./src/*.c -o ./build/main
+gcc ./src/*.c -o ./build/arh

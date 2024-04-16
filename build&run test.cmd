@@ -1,4 +1,4 @@
-gcc ./src/*.c -o ./build/main
+gcc ./src/*.c -o ./build/arh
 chcp 65001
 cd build
-main ../test.txt ../outtest
+arh ../test.txt ../outtest
