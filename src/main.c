@@ -11,19 +11,24 @@ int main(int argc, char* argv[]) {
     if (argc != 3) {
         printf("Error with arguments\n");
         system("pause");
-        return 1;
+        return -1;
     }
     FILE* fp, * fp2, * fp3;     //указатели на файлы
     fp = fopen(argv[1], "rb");  //открываем конкретный файл
 
     //Обработка ошибок чтения файла
     if (fp == NULL) {
-        perror("Err");
+        perror("Err input file:");
         system("pause");
-        return 2;
+        return 1;
     }
     fp2 = fopen("temp", "wb");  //открываем файл для записи бинарного кода
     fp3 = fopen(argv[2], "wb"); //открываем файл для записи сжатого файла
+    if (fp3 == NULL) {
+        perror("Err output file:");
+        system("pause");
+        return 2;
+    }
 
     unsigned int chh;   // в эту переменную читается информация из файла
     int k = 0;          //счётчик количества различных букв, уникальных символов
