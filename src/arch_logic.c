@@ -23,13 +23,11 @@ void makeCodes(symbol* root) {
     if (left != NULL) {
         sprintf(left->code, "%s%c", root->code, '0');
         makeCodes(left);
-        free(left);
         free(root);
     }
     if (right != NULL) {
         sprintf(right->code, "%s%c", root->code, '1');
         makeCodes(right);
-        free(right);
         free(root);
     }
 }
