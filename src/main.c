@@ -1,10 +1,18 @@
 #include <stdio.h>
 #include <windows.h>
+#include <sys/time.h>
 #include "types.h"
 #include "arch_logic.h"
 #include "information.h"
 #include "file_In_out.h"
 #include "math_func.h"
+
+double mtime() {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double mt = t.tv_sec + t.tv_usec / 1.e6;
+    return mt;
+}
 
 int main(int argc, char* argv[]) {
 
@@ -38,7 +46,10 @@ int main(int argc, char* argv[]) {
     symbol* psym[256];  //инициализируем массив указателей на записи
     int fsize2 = 0;     //счётчик количества (символов из) 0 и 1 в промежуточном файле temp
 
+    double r0 = mtime();
     reading_from_file(fp, simbols, kolvo, &kk, &k);  //Эту функцию опишите самостоятельно
+    double r1 = mtime();
+    printf("reading: %f s\n", r1 - r0);
 
     // Расчёт частоты встречаемости
     for (int i = 0; i < k; ++i) simbols[i].freq = (float)kolvo[i] / kk;
@@ -49,20 +60,39 @@ int main(int argc, char* argv[]) {
     //Сортировка по убыванию по частоте
     descend_sort(psym, k);
 
+    double mt0 = mtime();
     symbol* root = makeTree(psym, k);   //вызов функции создания дерева Хаффмана
+    double mt1 = mtime();
     makeCodes(root);  //вызов функции получения кода
+    double mt2 = mtime();
+    printf("tree: %f s\ncodes: %f s\n", mt1 - mt0, mt2 - mt1);
 
     rewind(fp); //возвращаем указатель в файле в начало файла
     //в цикле читаем исходный файл, и записываем полученные в функциях коды в промежуточный файл
-    while ((chh = fgetc(fp)) != EOF) {
-        for (int i = 0; i < k; i++)
-            if (chh == simbols[i].ch) fputs(simbols[i].code, fp2);
-    }
-    fclose(fp2);
+    // double tm0 = mtime();
+    // while ((chh = fgetc(fp)) != EOF) {   // можно перенести в writing_to_file()
+    //     for (int i = 0; i < k; i++)
+    //         if (chh == simbols[i].ch) fputs(simbols[i].code, fp2);
+    // }
+    // double tm1 = mtime();
+    // fclose(fp2);
+    // printf("fp2: %f s\n", tm1 - tm0);
 
-    fp2 = fopen("temp", "rb");
-    writing_to_file(fp2, fp3, &fsize2);  //Эту функцию опишите самостоятельно
+    // fp2 = fopen("temp", "rb");
+    double t0 = mtime();
+    // writing_to_file(fp2, fp3, &fsize2);
+    // printf("fsz2: %i\n", fsize2);
+    double t1 = mtime();
+    // printf("1 write: %f s\n", t1 - t0);
+
+    rewind(fp);
+    t0 = mtime();
+    writing_to_file_simb(fp, fp3, simbols, &k, &fsize2);    // более быстрый способ без промежуточного файла
+    t1 = mtime();
+    printf("fsz2: %i\n", fsize2);
     show_information(simbols, &k, &kk, &fsize2);
+    printf("2 write: %f s\n", t1 - t0);
+    printf("all time: %f s", t1 - r0);
 
     fclose(fp);
     fclose(fp2);
