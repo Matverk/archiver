@@ -1,4 +1,4 @@
 gcc ./src/*.c -o ./build/arh
 chcp 65001
 cd build
-arh ../test.txt ../outtest
+arh.exe ../test.txt ../outtest
