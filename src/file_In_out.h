@@ -16,11 +16,11 @@ void reading_from_file(FILE* fp, symbol* simbols, int* kolvo, int* allk, int* un
 /// @param fsize2 выходное количество 0 и 1 в сжатом файле
 void writing_to_file(FILE* fp2, FILE* fp3, int* fsize2);
 
-/// @brief Записывает сжатый файл из таблицы кодов `simbols`. Бытрее чем `writing_to_file()`
-/// @param fin подготовленный файл из 0 и 1
+/// @brief Записывает сжатый файл из таблицы кодов `simbols`. Быстрее чем `writing_to_file()`
+/// @param fin исходный файл
 /// @param fp3 выходной сжатый файл
 /// @param simbols массив уникальных символов
 /// @param uniqk количество уникальных символов
-/// @param fsize2 количество 0 и 1
+/// @param fsize2 количество 0 и 1 в сжатом файле
 void writing_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols, int* uniqk, int* fsize2);
 #endif

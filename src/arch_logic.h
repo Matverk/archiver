@@ -12,9 +12,9 @@ symbol* makeTree(symbol* psym[], int k);
 /// @param root указатель на полученный корень дерева
 void makeCodes(symbol* root);
 
-
 /// @brief Сортирует массив по убыванию значений `symbol.freq`
 /// @param psym массив указателей на тип `symbol`
 /// @param k длина массива
 void descend_sort(symbol* psym[], int k);
+
 #endif
