@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "arch_logic.h"
 
 symbol* makeTree(symbol* psym[], int k) {

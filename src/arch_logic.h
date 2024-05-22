@@ -1,5 +1,8 @@
 #ifndef FILE_H5
 #define FILE_H5
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "types.h"
 
 /// @brief Рeкурсивная функция создания дерева Хафмана.

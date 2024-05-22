@@ -1,4 +1,3 @@
-#include <math.h>
 #include "math_func.h"
 
 float entropy_count(symbol* simbols, int* k) {

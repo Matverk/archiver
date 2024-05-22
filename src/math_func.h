@@ -1,5 +1,6 @@
 #ifndef FILE_H2
 #define FILE_H2
+#include <math.h>
 #include "types.h"
 
 /// @brief 

@@ -1,5 +1,7 @@
 #ifndef FILE_H3
 #define FILE_H3
+#include <stdio.h>
+#include <string.h>
 #include "types.h"
 
 /// @brief Чтение и группировка символов

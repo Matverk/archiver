@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <string.h>
 #include "compress_file_in_out.h"
 
 void reading_from_file(FILE* fp, symbol* simbols, int* kolvo, int* allk, int* uniqk) {

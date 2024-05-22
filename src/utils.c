@@ -1,4 +1,3 @@
-#include <sys/time.h>
 #include "utils.h"
 
 double mtime() {
