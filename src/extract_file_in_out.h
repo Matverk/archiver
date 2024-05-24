@@ -1,5 +1,7 @@
 #pragma once
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "types.h"
 
 /// @brief Читает таблицу кодов из сжатого файла
@@ -8,5 +10,9 @@
 /// @return Количество записей (уникальных символов) 
 int read_code_table(FILE* fin, symbol* simbols);
 
-
-void extract_from_file(FILE* fin, symbol* simbols, int uniqk);
+/// @brief Декодирует `fin` в `fout` по таблице `simbols`
+/// @param fin Сжатый `arh` файл
+/// @param fout Извлечённый файл
+/// @param simbols Массив символов
+/// @param uniqk Количество записей (уникальных символов)
+void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk);
