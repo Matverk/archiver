@@ -1,7 +1,11 @@
 #include "arch_logic.h"
 
 symbol* makeTree(symbol* psym[], int k) {
-    symbol* temp = (symbol*)malloc(sizeof(symbol));
+    symbol* temp = (symbol*)malloc(sizeof(symbol)); // объединённый символ
+    if (temp == NULL) {
+        perror("Memory err with symbol:");
+        return NULL;
+    }
     if (k > 1) {
         temp->ch = psym[k - 2]->ch;
         temp->left = psym[k - 2];
@@ -20,7 +24,6 @@ void makeCodes(symbol* root) {
     if (left != NULL) {
         sprintf(left->code, "%s%c", root->code, '0');
         makeCodes(left);
-        free(root);
     }
     if (right != NULL) {
         sprintf(right->code, "%s%c", root->code, '1');
@@ -39,7 +42,7 @@ void descend_sort(symbol* psym[], int k) {
                 ind = j;
             }
         }
-        if (i != ind) {
+        if (i != ind) { // меняем местами
             symbol* tmp;
             tmp = psym[i];
             psym[i] = psym[ind];

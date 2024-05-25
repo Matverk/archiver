@@ -66,17 +66,25 @@ int read_code_table(FILE* fin, symbol* simbols) {
     return uniqk;
 }
 
-void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
+int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     size_t text_start = ftell(fin); // первый байт сжатого текста
     fseek(fin, 0, SEEK_END);
     size_t text_len = ftell(fin) - text_start;  // длина сжатого текста в байтах
     fseek(fin, text_start, SEEK_SET);
     char* buf = (char*)malloc(text_len + 1);    // байты как в файле
+    if (buf == NULL) {
+        perror("Memory err with byte buffer:");
+        return -1;
+    }
     buf[text_len] = '\0';
     fread(buf, 1, text_len, fin);   // читаем до конца файла
 
     size_t text_bitlen = text_len * 8;  // битов в тексте
     char* buf_str = (char*)malloc(text_bitlen + 1); // бит файла -->> байт (char)
+    if (buf_str == NULL) {
+        perror("Memory err with bit string buffer:");
+        return -1;
+    }
     for (size_t i = 0; i < text_len; ++i) { // преобразование в массив, где каждый бит - это '0' или '1'
         union code cd1;
         cd1.sym_to_write = buf[i];
@@ -99,4 +107,5 @@ void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     }
     free(buf);
     free(buf_str);
+    return 0;
 }

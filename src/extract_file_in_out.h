@@ -15,4 +15,5 @@ int read_code_table(FILE* fin, symbol* simbols);
 /// @param fout Извлечённый файл
 /// @param simbols Массив символов
 /// @param uniqk Количество записей (уникальных символов)
-void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk);
+/// @return -1, если ошибка памяти, иначе 0
+int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk);
