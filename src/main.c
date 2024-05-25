@@ -10,33 +10,42 @@
 
 int main(int argc, char* argv[]) {
 
-    if (argc != 4) {
-        printf("Usage: arh [mode] [input file] [output file]\n");
+    enum info_display tinfo = TIME_ONLY;
+    if (argc < 4) {
+        printf("Usage: arh [mode] [input file] [output file] [options]\n");
         printf("Mode:\n");
-        printf("   -c, --compress   Compress input file\n");
-        printf("   -e, --extract    Uncompress input file, that has been compressed with \"arh\"\n");
-        system("pause");
+        printf("   -c, --compress   Compress input file to output file\n");
+        printf("   -e, --extract    Uncompress input file compressed with \"arh\" to output file\n");
+        printf("Options:\n");
+        printf("   --full           Display time information and errors\n");
+        printf("   --quiet          Do not display any information, except errors\n");
+        // system("pause");
         return -1;
+    }
+    else if (argc == 5) {
+        if (!strcmp(argv[4], "--quiet")) tinfo = NONE;
+        else if (!strcmp(argv[4], "--full")) tinfo = FULL;
+        else printf("\"%s\" is not an available option\n", argv[4]);
     }
 
     FILE* f_in, * f_out;            //указатели на файлы
     f_in = fopen(argv[2], "rb");    //открываем входной файл
-    //Обработка ошибок чтения файла
+    //Обработка ошибок чтения файлов
     if (f_in == NULL) {
         perror("Err input file:");
-        system("pause");
+        // system("pause");
         return 1;
     }
     f_out = fopen(argv[3], "wb");   //открываем файл для записи сжатого файла
     if (f_out == NULL) {
         perror("Err output file:");
-        system("pause");
+        // system("pause");
         return 2;
     }
 
     int uniqk = 0;      // счётчик количества различных букв, уникальных символов
-    symbol simbols[256] = { 0 };    // массив записей 
-    if (!strncmp(argv[1], "-c", 3) || !strncmp(argv[1], "--compress", 11)) {
+    symbol simbols[256] = { 0 };    // массив записей
+    if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--compress")) {
         int kk = 0;         // счётчик количества всех знаков в файле
         int kolvo[256] = { 0 };     // массив количеств уникальных символов
         symbol* psym[256];  // инициализируем массив указателей на записи
@@ -56,6 +65,7 @@ int main(int argc, char* argv[]) {
 
         double mt0 = mtime();
         symbol* root = makeTree(psym, uniqk);   //создание дерева Хаффмана
+        if (root == NULL) return -10;
         double mt1 = mtime();
         makeCodes(root);    //получение кодов
         double mc2 = mtime();
@@ -68,17 +78,21 @@ int main(int argc, char* argv[]) {
         write_code_table(f_out, simbols, uniqk);
         compress_to_file_simb(f_in, f_out, simbols, uniqk, &fsize2);    // более быстрый способ без промежуточного файла
         double t1 = mtime();
-        show_information(simbols, uniqk, kk, fsize2);
-        printf("Time info:\nreading: %f s\n", r1 - r0);
-        printf("make tree: %f s\nmake codes: %f s\n", mt1 - mt0, mc2 - mt1);
-        // printf("1 write: %f s\n", ts1 - ts0);
-        printf("fast write: %f s\n", t1 - t0);
-        printf("all time: %f s\n", t1 - r0);
+        if (tinfo != NONE) {
+            if (tinfo == FULL) show_information(simbols, uniqk, kk, fsize2);
+            printf("Time info:\nreading: %f s\n", r1 - r0);
+            printf("make tree: %f s\nmake codes: %f s\n", mt1 - mt0, mc2 - mt1);
+            // printf("1 write: %f s\n", ts1 - ts0);
+            printf("fast write: %f s\n", t1 - t0);
+            printf("all time: %f s\n", t1 - r0);
+        }
     }
-    else if (!strncmp(argv[1], "-e", 3) || !strncmp(argv[1], "--extract", 10)) {
+    else if (!strcmp(argv[1], "-e") || !strcmp(argv[1], "--extract")) {
+        double te0 = mtime();
         uniqk = read_code_table(f_in, simbols);
-        extract_from_file(f_in, f_out, simbols, uniqk);
-        printf("extracted\n");
+        if (extract_from_file(f_in, f_out, simbols, uniqk)) return -11;
+        double te1 = mtime();
+        if (tinfo != NONE) printf("Extracted to \"%s\" in %f s\n", argv[3], te1 - te0);
     }
     fclose(f_in);
     fclose(f_out);

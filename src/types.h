@@ -22,4 +22,6 @@ union code {            //Объединение для записи кода с
         unsigned b1 : 1;
     } byte;
 };
+
+enum info_display { NONE, FULL, TIME_ONLY };
 #endif
