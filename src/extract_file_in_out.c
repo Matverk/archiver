@@ -71,12 +71,11 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     fseek(fin, 0, SEEK_END);
     size_t text_len = ftell(fin) - text_start;  // длина сжатого текста в байтах
     fseek(fin, text_start, SEEK_SET);
-    char* buf = (char*)malloc(text_len + 1);    // байты как в файле
+    unsigned char* buf = (unsigned char*)malloc(text_len + 1);  // байты как в файле
     if (buf == NULL) {
         perror("Memory err with byte buffer:");
         return -1;
     }
-    buf[text_len] = '\0';
     fread(buf, 1, text_len, fin);   // читаем до конца файла
 
     size_t text_bitlen = text_len * 8;  // битов в тексте
@@ -94,16 +93,17 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
 
     size_t cur_bit = 0; // текущий первый бит
     while (cur_bit < text_bitlen) {
+        short insert = 0;   // флаг нахождения символа для вставки
         for (int i = 0; i < uniqk; ++i) {
             int codelen = strlen(simbols[i].code);
-            size_t boundbit = cur_bit + codelen;
-            if (boundbit > text_bitlen) codelen -= boundbit - text_bitlen;  // обработка выхода за границу
-            if (!strncmp(buf_str + cur_bit, simbols[i].code, codelen)) {
+            if (cur_bit + codelen <= text_bitlen && !strncmp(buf_str + cur_bit, simbols[i].code, codelen)) {
                 putc(simbols[i].ch, fout);
                 cur_bit += codelen;
+                insert = 1;
                 break;
             }
         }
+        if (!insert) break;
     }
     free(buf);
     free(buf_str);
