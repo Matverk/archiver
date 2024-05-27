@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     enum info_display tinfo = TIME_ONLY;
     if (argc < 4) {
-        printf("Usage: arh [mode] [input file] [output file] [info option]\n");
+        printf("Usage: arh [mode] [input file] [output file] [info option (default: time info)]\n");
         printf("Mode:\n");
         printf("   -c, --compress   Compress input file to output file\n");
         printf("   -e, --extract    Uncompress input file compressed with \"arh\" to output file\n");
