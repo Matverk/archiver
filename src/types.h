@@ -23,5 +23,6 @@ union code {            //Объединение для записи кода с
     } byte;
 };
 
+enum mode { WRONG, COMPRESS, EXTRACT };
 enum info_display { NONE, FULL, TIME_ONLY };
 #endif

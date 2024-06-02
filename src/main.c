@@ -10,6 +10,7 @@
 
 int main(int argc, char* argv[]) {
 
+    enum mode mode = WRONG;
     enum info_display tinfo = TIME_ONLY;
     if (argc < 4) {
         printf("Usage: arh [mode] [input file] [output file] [info option (default: time info)]\n");
@@ -27,25 +28,33 @@ int main(int argc, char* argv[]) {
         else if (!strcmp(argv[4], "--full")) tinfo = FULL;
         else printf("\"%s\" is not an available option\n", argv[4]);
     }
+    if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--compress")) mode = COMPRESS;
+    else if (!strcmp(argv[1], "-e") || !strcmp(argv[1], "--extract")) mode = EXTRACT;
 
     FILE* f_in, * f_out;            //указатели на файлы
-    f_in = fopen(argv[2], "rb");    //открываем входной файл
-    //Обработка ошибок чтения файлов
-    if (f_in == NULL) {
-        perror("Err input file:");
-        // system("pause");
-        return 1;
+    if (mode != WRONG) {
+        f_in = fopen(argv[2], "rb");    //открываем входной файл
+        //Обработка ошибок чтения файлов
+        if (f_in == NULL) {
+            perror("Err input file:");
+            // system("pause");
+            return 1;
+        }
+        f_out = fopen(argv[3], "wb");   //открываем файл для записи сжатого файла
+        if (f_out == NULL) {
+            perror("Err output file:");
+            // system("pause");
+            return 2;
+        }
     }
-    f_out = fopen(argv[3], "wb");   //открываем файл для записи сжатого файла
-    if (f_out == NULL) {
-        perror("Err output file:");
-        // system("pause");
-        return 2;
+    else {
+        printf("\"%s\" is not an available mode\n", argv[1]);
+        return -1;
     }
 
     int uniqk = 0;      // счётчик количества различных букв, уникальных символов
     symbol simbols[256] = { 0 };    // массив записей
-    if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--compress")) {
+    if (mode == COMPRESS) {
         int kk = 0;         // счётчик количества всех знаков в файле
         int kolvo[256] = { 0 };     // массив количеств уникальных символов
         symbol* psym[256];  // инициализируем массив указателей на записи
@@ -87,7 +96,7 @@ int main(int argc, char* argv[]) {
             printf("all time: %f s\n", t1 - r0);
         }
     }
-    else if (!strcmp(argv[1], "-e") || !strcmp(argv[1], "--extract")) {
+    else if (mode == EXTRACT) {
         double te0 = mtime();
         uniqk = read_code_table(f_in, simbols);
         if (extract_from_file(f_in, f_out, simbols, uniqk)) return -11;
