@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
             printf("make tree: %f s\nmake codes: %f s\n", mt1 - mt0, mc2 - mt1);
             // printf("1 write: %f s\n", ts1 - ts0);
             printf("fast write: %f s\n", t1 - t0);
-            printf("all time: %f s\n", t1 - r0);
+			printf("Compressed to \"%s\" in %f s\n", argv[3], t1 - r0);
         }
     }
     else if (mode == EXTRACT) {
