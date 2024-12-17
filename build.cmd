@@ -1,1 +1,1 @@
-gcc ./src/*.c -o ./build/arh
+gcc ./src/*.c -O3 -o ./build/arh

@@ -32,5 +32,6 @@ void compress_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols, int uniqk, int
 /// @param fp3 сжатый файл
 /// @param simbols массив уникальных символов
 /// @param uniqk количество уникальных символов
-void write_code_table(FILE* fp3, symbol* simbols, int uniqk);
+/// @param allk количество символов в исходном файле
+void write_code_table(FILE* fp3, symbol* simbols, int uniqk, int allk);
 #endif

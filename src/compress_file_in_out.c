@@ -111,7 +111,7 @@ void compress_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols, int uniqk, int
     fputc(code1.sym_to_write, fp3);
 }
 
-void write_code_table(FILE* fp3, symbol* simbols, int uniqk) {
+void write_code_table(FILE* fp3, symbol* simbols, int uniqk, int allk) {
     putc((unsigned char)uniqk - 1, fp3);    // количество уник. символов
     for (int i = 0; i < uniqk; ++i) {
         char* code_str = simbols[i].code;
@@ -145,4 +145,5 @@ void write_code_table(FILE* fp3, symbol* simbols, int uniqk) {
             putc(cd1.sym_to_write, fp3);
         }
     }
+    putc((unsigned char)allk % 256, fp3);   // остаток (от / 256) длины исходного текста
 }

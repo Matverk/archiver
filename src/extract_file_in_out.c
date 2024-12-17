@@ -67,6 +67,7 @@ int read_code_table(FILE* fin, symbol* simbols) {
 }
 
 int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
+    unsigned allk_rem = getc(fin);  // это был остаток от / длины исходного файла на 256
     size_t text_start = ftell(fin); // первый байт сжатого текста
     fseek(fin, 0, SEEK_END);
     size_t text_len = ftell(fin) - text_start;  // длина сжатого текста в байтах
@@ -89,7 +90,16 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
         cd1.sym_to_write = buf[i];
         for (int j = 1; j <= 8; ++j) buf_str[i * 8 + j - 1] = get_bit(&cd1, j);
     }
+    free(buf);
     buf_str[text_bitlen] = '\0';
+
+    char* write_buf = (char*)malloc(WRITE_BUF_STEP);    // буфер для записи в извлечённый файл
+    if (write_buf == NULL) {
+        perror("Memory err with write buffer:");
+        return -1;
+    }
+    unsigned wbuf_size = WRITE_BUF_STEP;    // текущий максимальный размер
+    unsigned extract_allk = 0;  // длина извлечённого текста в байтах
 
     size_t cur_bit = 0; // текущий первый бит
     while (cur_bit < text_bitlen) {
@@ -97,7 +107,16 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
         for (int i = 0; i < uniqk; ++i) {
             int codelen = strlen(simbols[i].code);
             if (cur_bit + codelen <= text_bitlen && !strncmp(buf_str + cur_bit, simbols[i].code, codelen)) {
-                putc(simbols[i].ch, fout);
+                write_buf[extract_allk] = simbols[i].ch;    // нашли символ-байт и записали в выходной буфер
+                ++extract_allk;
+                if (extract_allk >= wbuf_size) {    // если текст не влезает
+                    wbuf_size += WRITE_BUF_STEP;
+                    write_buf = (char*)realloc(write_buf, wbuf_size);
+                    if (write_buf == NULL) {
+                        perror("Memory err with write buffer realloc:");
+                        return -1;
+                    }
+                }
                 cur_bit += codelen;
                 insert = 1;
                 break;
@@ -105,7 +124,11 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
         }
         if (!insert) break;
     }
-    free(buf);
     free(buf_str);
+    unsigned extr_rem = extract_allk % 256;
+    int delta = extr_rem >= allk_rem ? extr_rem - allk_rem : extr_rem + 256 - allk_rem; // подсчёт лишних байтов
+    fwrite(write_buf, 1, extract_allk - delta, fout);   // пишем весь буфер кроме последних лишних
+    free(write_buf);
+    // printf("Unwanted: %i\n", delta);
     return 0;
 }

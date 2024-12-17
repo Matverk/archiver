@@ -4,6 +4,8 @@
 #include <string.h>
 #include "types.h"
 
+#define WRITE_BUF_STEP 1024*50 // начальный размер и шаг увеличения буфера в байтах
+
 /// @brief Читает таблицу кодов из сжатого файла
 /// @param fin Входной сжатый `arh` файл
 /// @param simbols Выходной массив символов
