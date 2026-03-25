@@ -74,7 +74,7 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     fseek(fin, text_start, SEEK_SET);
     unsigned char* buf = (unsigned char*)malloc(text_len + 1);  // байты как в файле
     if (buf == NULL) {
-        perror("Memory err with byte buffer:");
+        perror("Memory err with byte buffer");
         return -1;
     }
     fread(buf, 1, text_len, fin);   // читаем до конца файла
@@ -82,7 +82,7 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     size_t text_bitlen = text_len * 8;  // битов в тексте
     char* buf_str = (char*)malloc(text_bitlen + 1); // бит файла -->> байт (char)
     if (buf_str == NULL) {
-        perror("Memory err with bit string buffer:");
+        perror("Memory err with bit string buffer");
         return -1;
     }
     for (size_t i = 0; i < text_len; ++i) { // преобразование в массив, где каждый бит - это '0' или '1'
@@ -95,7 +95,7 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
 
     char* write_buf = (char*)malloc(WRITE_BUF_STEP);    // буфер для записи в извлечённый файл
     if (write_buf == NULL) {
-        perror("Memory err with write buffer:");
+        perror("Memory err with write buffer");
         return -1;
     }
     unsigned wbuf_size = WRITE_BUF_STEP;    // текущий максимальный размер
@@ -113,7 +113,7 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
                     wbuf_size += WRITE_BUF_STEP;
                     write_buf = (char*)realloc(write_buf, wbuf_size);
                     if (write_buf == NULL) {
-                        perror("Memory err with write buffer realloc:");
+                        perror("Memory err with write buffer realloc");
                         return -1;
                     }
                 }

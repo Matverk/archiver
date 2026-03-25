@@ -3,7 +3,7 @@
 symbol* makeTree(symbol* psym[], int k) {
     symbol* temp = (symbol*)malloc(sizeof(symbol)); // объединённый символ
     if (temp == NULL) {
-        perror("Memory err with symbol:");
+        perror("Memory err with symbol");
         return NULL;
     }
     if (k > 1) {

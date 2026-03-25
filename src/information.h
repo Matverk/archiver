@@ -1,6 +1,8 @@
 #ifndef FILE_H4
 #define FILE_H4
+#include <stdio.h>
 #include "types.h"
+#include "math_func.h"
 
 /// @brief 
 /// @param simbols массив символов

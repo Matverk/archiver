@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include "math_func.h"
 #include "information.h"
 
 void show_information(symbol* simbols, int uniqk, int allk, int fsize_2) {
