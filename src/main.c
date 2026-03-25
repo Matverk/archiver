@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <locale.h>
 #include "types.h"
-#include "utils.h"
+#include "file_workers.h"
 
 int main(int argc, char* argv[]) {
 
@@ -11,10 +11,10 @@ int main(int argc, char* argv[]) {
     enum info_display tinfo = TIME_ONLY;
     setlocale(LC_ALL, "Russian");
     if (argc < 4) {
-        printf("Usage: arh [mode] [input file] [output file] [info option (default: time info)]\n");
+        printf("Usage: arh [mode] [input path] [output path] [info option (default: time info)]\n");
         printf("Mode:\n");
-        printf("   -c, --compress   Compress input file to output file\n");
-        printf("   -e, --extract    Uncompress input file compressed with \"arh\" to output file\n");
+        printf("   -c, --compress   Compress input file/dir to output file/dir\n");
+        printf("   -e, --extract    Uncompress input file/dir compressed with \"arh\" to output file/dir\n");
         printf("Info options:\n");
         printf("   --full           Display all information and errors\n");
         printf("   --quiet          Do not display any information, except errors\n");
@@ -63,5 +63,6 @@ int main(int argc, char* argv[]) {
         printf("\"%s\" is not an available mode\n", argv[1]);
         return -1;
     }
+    printf("Worker return code: %3d\n", ret_code);
     return ret_code;
 }
