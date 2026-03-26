@@ -10,8 +10,8 @@
 #include "information.h"
 
 #define TMP_ARCHDIR_FNAME ".arch.dir"   // имя временного архивного несжатого файла директории
-#define TOC_BUFSIZE_STEP 100            // шаг длины оглавления в дин.памяти (число записей)
-#define TRANSFER_BUF_SIZE 1024*50       // шаг буфера для копирования файлов, байт
+#define TOC_BUFSIZE_STEP 1024*5/sizeof(toc_entry*)  // шаг длины оглавления в дин.памяти (число записей)
+#define TRANSFER_BUF_SIZE 1024*64       // шаг буфера для копирования файлов, байт
 #define ARCHIVE_IS_FILE 0           // такой первый байт сжатого архива означает, что это был 1 файл
 #define ARCHIVE_IS_DIR 1            // означает, что это была директория
 
@@ -21,8 +21,7 @@
 /// @param mode режим: сжать/разжать
 /// @param tinfo режим вывода информации
 /// @param argv аргументы программы
-/// @return `0`, если всё ОК
-int file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tinfo, char* argv[]);
+void file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tinfo, char* argv[]);
 
 /// @brief Описывает всё содержимое (непустые папки) директории в одном файле
 /// @param path путь до директории
@@ -43,12 +42,10 @@ void archive_directory(char* path, char* toc_rootpath, toc_entry** toc[], unsign
 /// @param fname путь до архивного несжатого файла
 /// @param tinfo режим вывода информации
 /// @param argv аргументы программы
-/// @return `0`, если всё ОК
-int extract_directory_archfile(char* fname, enum info_display tinfo, char* argv[]);
+void extract_directory_archfile(char* fname, enum info_display tinfo, char* argv[]);
 
 /// @brief Сжимает или расжимает директорию
 /// @param mode режим: сжать/разжать
 /// @param tinfo режим вывода информации
 /// @param argv аргументы программы
-/// @return `0`, если всё ОК
-int directory_handler(enum mode mode, enum info_display tinfo, char* argv[]);
+void directory_handler(enum mode mode, enum info_display tinfo, char* argv[]);

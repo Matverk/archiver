@@ -2,10 +2,7 @@
 
 symbol* makeTree(symbol* psym[], int k) {
     symbol* temp = (symbol*)malloc(sizeof(symbol)); // объединённый символ
-    if (temp == NULL) {
-        perror("Memory err with symbol");
-        return NULL;
-    }
+    check_log_err_exit(temp != NULL, "Symbol memory allocation", 1, 1);
     if (k > 1) {
         temp->ch = psym[k - 2]->ch;
         temp->left = psym[k - 2];
@@ -15,8 +12,7 @@ symbol* makeTree(symbol* psym[], int k) {
         psym[k - 2] = temp;
         descend_sort(psym, k - 1);
         return makeTree(psym, k - 1);
-    }
-    else return psym[0];
+    } else return psym[0];
 }
 
 void makeCodes(symbol* root) {

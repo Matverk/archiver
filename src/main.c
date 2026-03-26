@@ -27,42 +27,28 @@ int main(int argc, char* argv[]) {
     if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--compress")) mode = COMPRESS;
     else if (!strcmp(argv[1], "-e") || !strcmp(argv[1], "--extract")) mode = EXTRACT;
 
-    int ret_code = 0;
     if (mode == COMPRESS) {
         struct stat s;
         if (!stat(argv[2], &s)) {           // получение свойств входного пути
             if (S_ISDIR(s.st_mode)) {       // входной путь - директория
-                ret_code = directory_handler(mode, tinfo, argv);
+                directory_handler(mode, tinfo, argv);
             } else if (S_ISREG(s.st_mode)) {    // входной путь - файл
                 FILE* f_in, * f_out;            //указатели на файлы
                 f_in = fopen(argv[2], "rb");    //открываем входной файл
-                if (f_in == NULL) {             //Обработка ошибок чтения файлов
-                    perror("Err at input file");
-                    return 1;
-                }
+                check_log_err_exit(f_in != NULL, "Input file opening", 1, 31);
+
                 f_out = fopen(argv[3], "wb");   //открываем файл для записи сжатого файла
-                if (f_out == NULL) {
-                    perror("Err at output file");
-                    return 2;
-                }
+                check_log_err_exit(f_out != NULL, "Output file opening", 1, 32);
                 fputc(ARCHIVE_IS_FILE, f_out);    // это сжатый файл
-                ret_code = file_handler(f_in, f_out, mode, tinfo, argv);
+                file_handler(f_in, f_out, mode, tinfo, argv);
                 fclose(f_in);
                 fclose(f_out);
-            } else {
-                printf("Input path is not a file or directory\n");
-                return -3;
-            }
-        } else {
-            perror("Err input path");
-            return -2;
-        }
-    } else if (mode == EXTRACT) {
-        ret_code = directory_handler(mode, tinfo, argv);
-    } else {
+            } else check_log_err_exit(0, "Input path is not a file or directory", 1, 33);
+        } else check_log_err_exit(0, "Get input path stats", 1, 34);
+    } else if (mode == EXTRACT) directory_handler(mode, tinfo, argv);
+    else {
         printf("\"%s\" is not an available mode\n", argv[1]);
-        return -1;
+        return -2;
     }
-    printf("Worker return code: %3d\n", ret_code);
-    return ret_code;
+    return 0;
 }

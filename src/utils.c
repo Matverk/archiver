@@ -15,7 +15,7 @@ void recurse_mkdir(char* path) {
         *sep = '/';
     }
     if (mkdir(path) && errno != EEXIST) {
-        fprintf(stderr, "error while trying to create '%s'", path);
+        fprintf(stderr, "Error while trying to create '%s' ", path);
         perror("");
     }
 }

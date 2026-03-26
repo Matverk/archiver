@@ -66,25 +66,19 @@ int read_code_table(FILE* fin, symbol* simbols) {
     return uniqk;
 }
 
-int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
+void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     unsigned allk_rem = getc(fin);  // это был остаток от / длины исходного файла на 256
     size_t text_start = ftell(fin); // первый байт сжатого текста
     fseek(fin, 0, SEEK_END);
     size_t text_len = ftell(fin) - text_start;  // длина сжатого текста в байтах
     fseek(fin, text_start, SEEK_SET);
     unsigned char* buf = (unsigned char*)malloc(text_len + 1);  // байты как в файле
-    if (buf == NULL) {
-        perror("Memory err with byte buffer");
-        return -1;
-    }
+    check_log_err_exit(buf != NULL, "Byte buffer memory allocation", 1, 2);
     fread(buf, 1, text_len, fin);   // читаем до конца файла
 
     size_t text_bitlen = text_len * 8;  // битов в тексте
     char* buf_str = (char*)malloc(text_bitlen + 1); // бит файла -->> байт (char)
-    if (buf_str == NULL) {
-        perror("Memory err with bit string buffer");
-        return -1;
-    }
+    check_log_err_exit(buf_str != NULL, "Bit string buffer memory allocation", 1, 3);
     for (size_t i = 0; i < text_len; ++i) { // преобразование в массив, где каждый бит - это '0' или '1'
         union code cd1;
         cd1.sym_to_write = buf[i];
@@ -94,10 +88,7 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     buf_str[text_bitlen] = '\0';
 
     char* write_buf = (char*)malloc(WRITE_BUF_STEP);    // буфер для записи в извлечённый файл
-    if (write_buf == NULL) {
-        perror("Memory err with write buffer");
-        return -1;
-    }
+    check_log_err_exit(write_buf != NULL, "Write buffer memory allocation", 1, 4);
     unsigned wbuf_size = WRITE_BUF_STEP;    // текущий максимальный размер
     unsigned extract_allk = 0;  // длина извлечённого текста в байтах
 
@@ -112,10 +103,7 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
                 if (extract_allk >= wbuf_size) {    // если текст не влезает
                     wbuf_size += WRITE_BUF_STEP;
                     write_buf = (char*)realloc(write_buf, wbuf_size);
-                    if (write_buf == NULL) {
-                        perror("Memory err with write buffer realloc");
-                        return -1;
-                    }
+                    check_log_err_exit(write_buf != NULL, "Write buffer memory reallocation", 1, 5);
                 }
                 cur_bit += codelen;
                 insert = 1;
@@ -130,5 +118,4 @@ int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     fwrite(write_buf, 1, extract_allk - delta, fout);   // пишем весь буфер кроме последних лишних
     free(write_buf);
     // printf("Unwanted: %i\n", delta);
-    return 0;
 }

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "types.h"
+#include "utils.h"
 
 #define WRITE_BUF_STEP 1024*50 // начальный размер и шаг увеличения буфера в байтах
 
@@ -17,5 +18,4 @@ int read_code_table(FILE* fin, symbol* simbols);
 /// @param fout Извлечённый файл
 /// @param simbols Массив символов
 /// @param uniqk Количество записей (уникальных символов)
-/// @return -1, если ошибка памяти, иначе 0
-int extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk);
+void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk);
