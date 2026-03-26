@@ -54,29 +54,33 @@ int file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tinf
     return 0;
 }
 
-void archive_directory(char* path, toc_entry** toc[], unsigned* toc_len, unsigned* toc_alloc_len) {
+void archive_directory(char* path, char* toc_rootpath, toc_entry** toc[], unsigned* toc_len, unsigned* toc_alloc_len) {
     DIR* dd = opendir(path);
     if (dd == NULL) {
         perror("Can't open directory");
+        exit(4);
         return;
     }
     struct dirent* dirent_p;
     while ((dirent_p = readdir(dd)) != NULL) {
         struct stat st;
         if (!(!strcmp(dirent_p->d_name, "..") || !strcmp(dirent_p->d_name, "."))) { // игнорируем ссылки на себя и родителя
-            char* child_fname = (char*)malloc(strlen(path) + 1 + dirent_p->d_namlen + 1);
-            if (child_fname == NULL) {
-                perror("Err at path name buff allocation");
+            char* child_fname = (char*)malloc(strlen(path) + 1 + dirent_p->d_namlen + 1);   // полный путь
+            char* toc_child_fname = (char*)malloc(strlen(toc_rootpath) + 1 + dirent_p->d_namlen + 1);   // путь, начиная с общей директории
+            if (child_fname == NULL || toc_child_fname == NULL) {
+                perror("Err at path name buffers allocation");
                 closedir(dd);
+                exit(5);
                 return;
             }
-            sprintf(child_fname, "%s/%s", path, dirent_p->d_name);
+            snprintf(child_fname, PATH_MAX, "%s/%s", path, dirent_p->d_name);
+            snprintf(toc_child_fname, PATH_MAX, "%s/%s", toc_rootpath, dirent_p->d_name);
             if (stat(child_fname, &st)) {
                 fprintf(stderr, "Unable to stat %s\n", child_fname);
                 continue;
             }
             if (S_ISDIR(st.st_mode)) {
-                archive_directory(child_fname, toc, toc_len, toc_alloc_len);
+                archive_directory(child_fname, toc_child_fname, toc, toc_len, toc_alloc_len);
             } else if (st.st_size <= UINT_MAX) {
                 if (*toc_len >= *toc_alloc_len) {
                     *toc_alloc_len += TOC_BUFSIZE_STEP;
@@ -84,6 +88,7 @@ void archive_directory(char* path, toc_entry** toc[], unsigned* toc_len, unsigne
                     if (*toc == NULL) {
                         perror("Err at table of contents buffer reallocation");
                         closedir(dd);
+                        exit(6);
                         return;
                     }
                 }
@@ -91,17 +96,17 @@ void archive_directory(char* path, toc_entry** toc[], unsigned* toc_len, unsigne
                 if ((*toc)[*toc_len] == NULL) {
                     perror("Err at allocating table of contents entry");
                     closedir(dd);
+                    exit(7);
                     return;
                 }
-                (*toc)[*toc_len]->path = (char*)malloc(strlen(child_fname) + 1);
+                (*toc)[*toc_len]->path = strdup(toc_child_fname);
                 if ((*toc)[*toc_len]->path == NULL) {
                     perror("Err at allocating table of contents entry path");
                     closedir(dd);
+                    exit(8);
                     return;
                 }
-                strcpy((*toc)[*toc_len]->path, child_fname);
                 (*toc)[*toc_len]->size = st.st_size;
-                // printf("%3d file #%d: %s, size=%d B\n", *toc_alloc_len, *toc_len, child_fname, st.st_size);
                 ++(*toc_len);
             } else printf("Skipped large file: %s\n", child_fname);
             free(child_fname);
@@ -110,8 +115,8 @@ void archive_directory(char* path, toc_entry** toc[], unsigned* toc_len, unsigne
     closedir(dd);
 }
 
-FILE* create_directory_archfile(char* path, char* tmp_path) {
-    char* path_in = strdup(path);
+FILE* create_directory_archfile(char* path, char* tmp_path, enum info_display tinfo) {
+    char* path_in = strdup(path);   // копия входного пути, чтобы изменять его
     if (path_in == NULL) {
         perror("Err at pathname allocation");
         return NULL;
@@ -119,7 +124,7 @@ FILE* create_directory_archfile(char* path, char* tmp_path) {
     char* lastchar; // указатель на последний символ строки
     char* bslash;   // самый правый обратный слэш
     char* slash;
-    while (1) {
+    while (1) {     // отрезаем все последние \ и /
         lastchar = path_in + strlen(path_in) - 1;
         bslash = strrchr(path_in, '\\');
         slash = strrchr(path_in, '/');
@@ -128,14 +133,13 @@ FILE* create_directory_archfile(char* path, char* tmp_path) {
         else break;
     }
     char* last_path;
-    if (bslash != NULL) last_path = strdup(bslash + 1);
+    if (bslash != NULL) last_path = strdup(bslash + 1); // отрезаем всё до самой вложенной директории
     else if (slash != NULL) last_path = strdup(slash + 1);
-    else last_path = strdup(path);
+    else last_path = strdup(path_in);
     if (last_path == NULL) {
         perror("Err at last pathname allocation");
         return NULL;
     }
-    free(path_in);
     FILE* sumfile = fopen(tmp_path, "wb");
     if (sumfile == NULL) {
         perror("Err at opening directory archive file for writing");
@@ -149,14 +153,14 @@ FILE* create_directory_archfile(char* path, char* tmp_path) {
         return NULL;
     }
     unsigned toc_len = 0, toc_alloc_len = TOC_BUFSIZE_STEP;
-    archive_directory(last_path, &toc, &toc_len, &toc_alloc_len);
+    archive_directory(path, last_path, &toc, &toc_len, &toc_alloc_len);
     free(last_path);
 
     for (int i = 0; i < toc_len; ++i) {     // запись оглавления
         fwrite(toc[i]->path, 1, strlen(toc[i]->path), sumfile);
         fputc('"', sumfile);
         fwrite(&(toc[i]->size), sizeof(toc[i]->size), 1, sumfile);
-        // printf("%4d: %70s | %10d\n", i, toc[i]->path, toc[i]->size);
+        if (tinfo == FULL) printf("%4d: %70s | %10d\n", i, toc[i]->path, toc[i]->size);
     }
     fputc('"', sumfile);
 
@@ -167,7 +171,10 @@ FILE* create_directory_archfile(char* path, char* tmp_path) {
         return NULL;
     }
     for (int i = 0; i < toc_len; ++i) {
-        FILE* targetf = fopen(toc[i]->path, "rb");
+        slash = strchr(toc[i]->path, '/');
+        char pathb[PATH_MAX];
+        snprintf(pathb, PATH_MAX, "%s%s", path_in, slash);  // получение настоящего пути из оглавления и аргументов
+        FILE* targetf = fopen(pathb, "rb");
         if (targetf == NULL) {
             fprintf(stderr, "Err at opening file: %s:", toc[i]->path);
             perror("");
@@ -183,6 +190,7 @@ FILE* create_directory_archfile(char* path, char* tmp_path) {
         free(toc[i]);
     }
     free(toc);
+    free(path_in);
     fclose(sumfile);
     sumfile = fopen(tmp_path, "rb");
     if (sumfile == NULL) {
@@ -193,7 +201,7 @@ FILE* create_directory_archfile(char* path, char* tmp_path) {
     return sumfile;
 }
 
-int extract_directory_archfile(char* fname, char* argv[]) {
+int extract_directory_archfile(char* fname, enum info_display tinfo, char* argv[]) {
     toc_entry** toc = (toc_entry**)malloc(sizeof(toc_entry*) * TOC_BUFSIZE_STEP);
     if (toc == NULL) {
         perror("Err at table of contents buffer allocation");
@@ -203,11 +211,12 @@ int extract_directory_archfile(char* fname, char* argv[]) {
     FILE* archf = fopen(fname, "rb");
     if (archf == NULL) {
         perror("Err at open directory archive file");
+        free(toc);
         return -22;
     }
     unsigned char c;
     char tocpath_buf[PATH_MAX];
-    int tocpath_cnt = 0, fsize_read_flag = 0;
+    int tocpath_cnt = 0;
     enum state { FPATH, FSIZE } state = FPATH;
     while (1) {                 // чтение оглавления
         if (toc_len >= toc_alloc_len) {
@@ -215,12 +224,15 @@ int extract_directory_archfile(char* fname, char* argv[]) {
             toc = (toc_entry**)realloc(toc, sizeof(toc_entry*) * toc_alloc_len);
             if (toc == NULL) {
                 perror("Err at table of contents buffer reallocation");
+                fclose(archf);
                 return -25;
             }
         }
         toc[toc_len] = (toc_entry*)malloc(sizeof(toc_entry));
         if (toc[toc_len] == NULL) {
             perror("Err at table of cont entry alloc");
+            free(toc);
+            fclose(archf);
             return -23;
         }
         if (state != FSIZE) c = fgetc(archf);
@@ -228,7 +240,13 @@ int extract_directory_archfile(char* fname, char* argv[]) {
             if (c != '"') {
                 tocpath_buf[tocpath_cnt] = c;
                 ++tocpath_cnt;
-            } else if (!tocpath_cnt) break;
+                if (tocpath_cnt >= PATH_MAX) {
+                    fprintf(stderr, "Path is too long\n");
+                    fclose(archf);
+                    free(toc);
+                    return -26;
+                }
+            } else if (!tocpath_cnt) break;     // конец оглавления
             else state = FSIZE;
         } else if (state == FSIZE) {
             tocpath_buf[tocpath_cnt] = 0;
@@ -253,15 +271,15 @@ int extract_directory_archfile(char* fname, char* argv[]) {
         return -26;
     }
     for (int i = 0; i < toc_len; ++i) {
-        // printf("%4d: %70s | %10d\n", i, toc[i]->path, toc[i]->size);
         char out_path[PATH_MAX];
-        sprintf(out_path, "%s/%s", argv[3], toc[i]->path);
+        snprintf(out_path, PATH_MAX, "%s/%s", argv[3], toc[i]->path);   // есть ограничение на длину пути
         FILE* fout = fopen_mkdir(out_path, "wb");
         if (fout == NULL) {
             perror("Err at one of output target files");
             fprintf(stderr, "Skipped\n");
             continue;
         }
+        if (tinfo == FULL) printf("%4d: %70s | %10d\n", i, toc[i]->path, toc[i]->size);
         unsigned transfer_left = toc[i]->size;
         while (1) {                     // копирование содержимого из архива по файлам
             int minsize = TRANSFER_BUF_SIZE < transfer_left ? TRANSFER_BUF_SIZE : transfer_left;
@@ -281,24 +299,25 @@ int extract_directory_archfile(char* fname, char* argv[]) {
 
 int directory_handler(enum mode mode, enum info_display tinfo, char* argv[]) {
     int ret_code = 0, ret_c_fhandle;    // коды возвратов
-    int is_archdir = 0;     // признак архива директории
+    unsigned char arch_marker = 0;      // признак правильности с вероятностью 254/256 = 99,2%
     FILE* f_in, * f_out;
     char* tmp_path = tmppath();
     if (tmp_path == NULL) {
         perror("Err at temporary path string allocation");
         return -16;
     }
-    snprintf(tmp_path, PATH_MAX, "%s%s", tmp_path, TMP_ARCHDIR_FNAME);
+    snprintf(tmp_path, PATH_MAX, "%s/%s", tmp_path, TMP_ARCHDIR_FNAME);
+    printf("%s\n", tmp_path);
     double t0, t1, t2, t3;
     switch (mode) {
     case COMPRESS:
         f_out = fopen(argv[3], "wb");
         if (f_out == NULL) {
             perror("Err at output file");
-            return 2;
+            return 22;
         }
         t0 = mtime();
-        FILE* archfile = create_directory_archfile(argv[2], tmp_path);
+        FILE* archfile = create_directory_archfile(argv[2], tmp_path, tinfo);
         t1 = mtime();
         if (archfile == NULL) {
             free(tmp_path);
@@ -309,7 +328,7 @@ int directory_handler(enum mode mode, enum info_display tinfo, char* argv[]) {
             printf("Compressing this file...\n");
         }
         t2 = mtime();
-        fputc(1, f_out);    // это архив директории
+        fputc(ARCHIVE_IS_DIR, f_out);   // это архив директории
         ret_code = file_handler(archfile, f_out, mode, tinfo, argv);
         t3 = mtime();
         fclose(archfile);
@@ -329,35 +348,39 @@ int directory_handler(enum mode mode, enum info_display tinfo, char* argv[]) {
             free(tmp_path);
             return 1;
         }
-        f_out = fopen(tmp_path, "wb");
-        if (f_out == NULL) {
-            perror("Err at temp archive file");
-            free(tmp_path);
-            return -15;
-        }
-        t0 = mtime();
-        is_archdir = fgetc(f_in);
-        ret_c_fhandle = file_handler(f_in, f_out, mode, tinfo, argv);
-        t1 = mtime();
-        fclose(f_out);
-        fclose(f_in);
-        if (ret_c_fhandle) {
-            free(tmp_path);
-            return ret_c_fhandle;
-        }
-        if (is_archdir) {
-            t2 = mtime();
-            ret_code = extract_directory_archfile(tmp_path, argv);
-            t3 = mtime();
-        }
-        if (remove(tmp_path)) {
-            perror("Can't delete arch directory file");
-            free(tmp_path);
-            return -12;
-        }
-        if (tinfo != NONE) {
-            printf("Extract directory archive file: %f s\n", t3 - t2);
-            printf("Directory decompressed & extracted in %f s\n", t3 - t2 + t1 - t0);
+        arch_marker = fgetc(f_in);
+        if ((arch_marker == ARCHIVE_IS_FILE || arch_marker == ARCHIVE_IS_DIR) && !feof(f_in)) { // правильный непустой входной файл
+            f_out = fopen(tmp_path, "wb");
+            if (f_out == NULL) {
+                perror("Err at temp archive file");
+                free(tmp_path);
+                return -15;
+            }
+            t0 = mtime();
+            ret_c_fhandle = file_handler(f_in, f_out, mode, tinfo, argv);
+            t1 = mtime();
+            fclose(f_out);
+            fclose(f_in);
+            if (ret_c_fhandle) {
+                free(tmp_path);
+                return ret_c_fhandle;
+            }
+            if (arch_marker == ARCHIVE_IS_DIR) {
+                t2 = mtime();
+                ret_code = extract_directory_archfile(tmp_path, tinfo, argv);
+                t3 = mtime();
+            }
+            if (remove(tmp_path)) {
+                perror("Can't delete arch directory file");
+                free(tmp_path);
+                return -12;
+            }
+            if (tinfo != NONE) {
+                printf("Extract directory archive file: %f s\n", t3 - t2);
+                printf("Directory decompressed & extracted in %f s\n", t3 - t2 + t1 - t0);
+            }
+        } else {
+            fprintf(stderr, "File is incorrect\n");
         }
         break;
     default: break;

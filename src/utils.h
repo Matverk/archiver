@@ -6,6 +6,8 @@
 #include <windows.h>
 #include "types.h"
 
+#define TMP_UNIX_PATH "/tmp"          // путь временной директории для не Windows
+
 /// @brief Получение текущего времени системы
 /// @return Текущее время в секундах
 double mtime();

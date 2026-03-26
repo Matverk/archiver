@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
                     perror("Err at output file");
                     return 2;
                 }
-                fputc(0, f_out);    // это сжатый файл
+                fputc(ARCHIVE_IS_FILE, f_out);    // это сжатый файл
                 ret_code = file_handler(f_in, f_out, mode, tinfo, argv);
                 fclose(f_in);
                 fclose(f_out);
