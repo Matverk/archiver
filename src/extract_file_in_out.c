@@ -95,16 +95,16 @@ void extract_from_file(FILE* fin, FILE* fout, symbol* simbols, int uniqk) {
     size_t cur_bit = 0; // текущий первый бит
     while (cur_bit < text_bitlen) {
         short insert = 0;   // флаг нахождения символа для вставки
-        for (int i = 0; i < uniqk; ++i) {
-            int codelen = strlen(simbols[i].code);
+        for (short i = 0; i < uniqk; ++i) {
+            short codelen = strlen(simbols[i].code);
             if (cur_bit + codelen <= text_bitlen && !strncmp(buf_str + cur_bit, simbols[i].code, codelen)) {
-                write_buf[extract_allk] = simbols[i].ch;    // нашли символ-байт и записали в выходной буфер
-                ++extract_allk;
                 if (extract_allk >= wbuf_size) {    // если текст не влезает
                     wbuf_size += WRITE_BUF_STEP;
                     write_buf = (char*)realloc(write_buf, wbuf_size);
                     check_log_err_exit(write_buf != NULL, "Write buffer memory reallocation", 1, 5);
                 }
+                write_buf[extract_allk] = simbols[i].ch;    // нашли символ-байт и записали в выходной буфер
+                ++extract_allk;
                 cur_bit += codelen;
                 insert = 1;
                 break;

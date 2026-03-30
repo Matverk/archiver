@@ -11,6 +11,7 @@ void file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tin
         double r0 = mtime();
         reading_from_file(f_in, simbols, kolvo, &kk, &uniqk);
         double r1 = mtime();
+        if (tinfo != NONE) printf("reading: %f s\n", r1 - r0);
 
         // Расчёт частоты встречаемости
         for (int i = 0; i < uniqk; ++i) simbols[i].freq = (float)kolvo[i] / kk;
@@ -27,19 +28,18 @@ void file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tin
         makeCodes(root);    //получение кодов
         double mc2 = mtime();
         rewind(f_in);   //возвращаем указатель в файле в начало файла
+        if (tinfo != NONE) printf("make tree: %f s\nmake codes: %f s\n", mt1 - mt0, mc2 - mt1);
         // double ts0 = mtime();
         // compress_to_file(f_in, f_out, simbols, uniqk, &fsize2);    // медленно
         // double ts1 = mtime();
         // rewind(f_in);
+        // if (tinfo != NONE) printf("1 write: %f s\n", ts1 - ts0);
         double t0 = mtime();
         write_code_table(f_out, simbols, uniqk, kk);
         compress_to_file_simb(f_in, f_out, simbols, uniqk, &fsize2);    // более быстрый способ без промежуточного файла
         double t1 = mtime();
         if (tinfo != NONE) {
             if (tinfo == FULL) show_information(simbols, uniqk, kk, fsize2);
-            printf("reading: %f s\n", r1 - r0);
-            printf("make tree: %f s\nmake codes: %f s\n", mt1 - mt0, mc2 - mt1);
-            // printf("1 write: %f s\n", ts1 - ts0);
             printf("fast write: %f s\n", t1 - t0);
             printf("File compressed to \"%s\" in %f s\n", argv[3], t1 - r0);
         }
@@ -124,6 +124,7 @@ FILE* create_directory_archfile(char* path, char* tmp_path, enum info_display ti
         if (tinfo == FULL) printf("%4d: %70s | %10d\n", i, toc[i]->path, toc[i]->size);
     }
     fputc('"', sumfile);
+    if (tinfo != NONE) printf("Total number of files: %d\n", toc_len);
 
     char* transfer_buf = (char*)malloc(TRANSFER_BUF_SIZE);
     check_log_err_exit(transfer_buf != NULL, "Transfer buffer memory allocation", 1, 15);
@@ -141,6 +142,7 @@ FILE* create_directory_archfile(char* path, char* tmp_path, enum info_display ti
             fwrite(transfer_buf, 1, read_num, sumfile);
             if (feof(targetf)) break;
         }
+        fclose(targetf);
         free(toc[i]->path);
         free(toc[i]);
     }
