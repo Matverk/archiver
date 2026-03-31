@@ -6,7 +6,7 @@ void file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tin
     if (mode == COMPRESS) {
         int kk = 0;         // счётчик количества всех знаков в файле
         int kolvo[256] = { 0 };     // массив количеств уникальных символов
-        symbol* psym[256];  // инициализируем массив указателей на записи
+        symbol* psym[256];  // массив указателей на записи
         int fsize2 = 0;     // счётчик количества бит в сжатом файле
         double r0 = mtime();
         reading_from_file(f_in, simbols, kolvo, &kk, &uniqk);
@@ -18,9 +18,7 @@ void file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tin
 
         // В массив указателей psym заносим адреса записей
         for (int i = 0; i < uniqk; ++i) psym[i] = simbols + i;
-
-        //Сортировка по убыванию по частоте
-        descend_sort(psym, uniqk);
+        descend_sort(psym, uniqk);  //Сортировка по убыванию по частоте
 
         double mt0 = mtime();
         symbol* root = makeTree(psym, uniqk);   //создание дерева Хаффмана
@@ -29,17 +27,20 @@ void file_handler(FILE* f_in, FILE* f_out, enum mode mode, enum info_display tin
         double mc2 = mtime();
         rewind(f_in);   //возвращаем указатель в файле в начало файла
         if (tinfo != NONE) printf("make tree: %f s\nmake codes: %f s\n", mt1 - mt0, mc2 - mt1);
+
+        for (int i = 0; i < uniqk; ++i) psym[i] = simbols + i;
+        descend_sort(psym, uniqk);      // создание отсортированного массива для ускорения поиска (кодирования)
         // double ts0 = mtime();
         // compress_to_file(f_in, f_out, simbols, uniqk, &fsize2);    // медленно
         // double ts1 = mtime();
         // rewind(f_in);
         // if (tinfo != NONE) printf("1 write: %f s\n", ts1 - ts0);
         double t0 = mtime();
-        write_code_table(f_out, simbols, uniqk, kk);
-        compress_to_file_simb(f_in, f_out, simbols, uniqk, &fsize2);    // более быстрый способ без промежуточного файла
+        write_code_table(f_out, psym, uniqk, kk);
+        compress_to_file_simb(f_in, f_out, psym, uniqk, &fsize2);   // более быстрый способ без промежуточного файла
         double t1 = mtime();
         if (tinfo != NONE) {
-            if (tinfo == FULL) show_information(simbols, uniqk, kk, fsize2);
+            if (tinfo == FULL) show_information(psym, uniqk, kk, fsize2);
             printf("fast write: %f s\n", t1 - t0);
             printf("File compressed to \"%s\" in %f s\n", argv[3], t1 - r0);
         }

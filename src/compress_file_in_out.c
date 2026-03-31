@@ -23,8 +23,7 @@ void reading_from_file(FILE* fp, symbol* simbols, int* kolvo, int* allk, int* un
             simbols[*uniqk] = s;
             kolvo[*uniqk] = 1;
             ++(*uniqk);
-        }
-        else ++(kolvo[i]);
+        } else ++(kolvo[i]);
     }
 }
 /// @brief Сборка байта побитово в `code1` для записи в сжатый файл. Производится конвертация из `char` в бит.
@@ -85,7 +84,7 @@ void compress_to_file(FILE* fin, FILE* fp3, symbol* simbols, int uniqk, int* fsi
     fputc(code1.sym_to_write, fp3);
 }
 
-void compress_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols, int uniqk, int* fsize2) {
+void compress_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols[], int uniqk, int* fsize2) {
     char ch;
     union code code1;
     int i = 1;
@@ -94,14 +93,14 @@ void compress_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols, int uniqk, int
         ch = fgetc(fin);    // для каждого символа в исходном файле пишем его новый код
         if (feof(fin)) break;
         for (int c = 0; c < uniqk; ++c) {
-            if (simbols[c].ch == (unsigned char)ch) {
-                for (int j = 0; j < strlen(simbols[c].code); ++j) {
+            if (simbols[c]->ch == (unsigned char)ch) {
+                for (int j = 0; j < strlen(simbols[c]->code); ++j) {
                     if (i > 8) {
                         i = 1;
                         fputc(code1.sym_to_write, fp3);
                         code1.sym_to_write = '\0';
                     }
-                    insert_bit(&code1, i, simbols[c].code[j]);
+                    insert_bit(&code1, i, simbols[c]->code[j]);
                     ++i;
                     ++(*fsize2);
                 }
@@ -111,13 +110,13 @@ void compress_to_file_simb(FILE* fin, FILE* fp3, symbol* simbols, int uniqk, int
     fputc(code1.sym_to_write, fp3);
 }
 
-void write_code_table(FILE* fp3, symbol* simbols, int uniqk, int allk) {
+void write_code_table(FILE* fp3, symbol* simbols[], int uniqk, int allk) {
     putc((unsigned char)uniqk - 1, fp3);    // количество уник. символов
     for (int i = 0; i < uniqk; ++i) {
-        char* code_str = simbols[i].code;
+        char* code_str = simbols[i]->code;
         int codelen = strlen(code_str);
         int leftlen = codelen;
-        putc(simbols[i].ch, fp3);   // пишем исходный символ
+        putc(simbols[i]->ch, fp3);   // пишем исходный символ
         union code cd1;
         while (leftlen) {
             cd1.sym_to_write = '\0';
@@ -137,8 +136,7 @@ void write_code_table(FILE* fp3, symbol* simbols, int uniqk, int allk) {
                     for (int j = lsti; j <= 8; ++j) insert_bit(&cd1, j, symb_fill);
                 }
                 leftlen = 0;
-            }
-            else {
+            } else {
                 for (int j = 3; j <= 8; ++j) insert_bit(&cd1, j, code_str[codelen - leftlen + j - 3]);
                 leftlen -= 6;
             }
